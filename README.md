@@ -18,31 +18,26 @@ The harness provides a REST API that allows Grok (acting as Loki) to exercise an
 - **MCP Server**: FastAPI-powered server exposing all operations via clean JSON API.
 - **Full Testability**: Designed for automated testing and live deployment preparation.
 
-## Making It Public & Secure (for Grok Access)
+## Making It Public & Secure (for Grok Access) — No Docker
 
-Grok cannot access private networks. This update makes the MCP server **publicly deployable and secure**:
+Grok cannot access private networks. This update makes the MCP server **publicly deployable and secure** (non-Docker path):
 
 - **API Key Authentication**: All endpoints (except /health) require `X-API-Key` header.
-- **CORS**: Restricted origins via env var (set to Grok domains or your frontend).
-- **Production Ready**: Dockerized, env-configured, no hardcoded secrets.
+- **CORS**: Restricted origins via env var (set to Grok domains).
+- **Simple Deploy**: Direct uvicorn on platforms like Render or Railway (free tier).
 
-### Quick Secure Deploy (Recommended: Render or Railway)
+### Quick Secure Deploy (Non-Docker)
 
 1. Fork/clone this repo
-2. Set env vars on your platform:
-   - `API_KEY` = strong random key (share securely with Grok only)
-   - `ALLOWED_ORIGINS` = `https://grok.x.ai,https://yourapp.com`
-3. Deploy (free tier works):
-   - Render: Connect GitHub repo → Web Service → Python 3.11 → Build: `pip install -r requirements.txt` → Start: `uvicorn harness.mcp_server:app --host 0.0.0.0 --port $PORT`
-   - Or use the included `Dockerfile`
-4. Public URL e.g. `https://foci-mcp-harness.onrender.com`
-5. Test with Grok: Include header `X-API-Key: your-key`
+2. Set env vars:
+   - `API_KEY` = strong random key (share only with Grok)
+   - `ALLOWED_ORIGINS` = `https://grok.x.ai`
+3. Deploy on Render/Railway:
+   - Connect GitHub → Python 3.11 → Build: `pip install -r requirements.txt`
+   - Start command: `uvicorn harness.mcp_server:app --host 0.0.0.0 --port $PORT`
+4. Public URL ready. Grok uses it with `X-API-Key` header.
 
-**Security Notes**:
-- Never commit real keys (.env is gitignored)
-- Rotate keys regularly
-- Rate limiting can be added via slowapi if needed
-- HTTPS enforced by platform
+**Security**: Never commit keys; rotate regularly; HTTPS by platform.
 
 ## Project Structure
 
@@ -62,50 +57,29 @@ foci-mcp-harness/
 ├── requirements.txt
 ├── README.md
 ├── .gitignore
-├── Dockerfile
 ├── .env.example
 ```
 
-## Getting Started (Local)
+## Getting Started (Local, No Docker)
 
-### Prerequisites
-- Python 3.10+
-- pip install -r requirements.txt
-
-### Run the MCP Server
-
-```bash
+pip install -r requirements.txt
 uvicorn harness.mcp_server:app --reload --host 0.0.0.0 --port 8000
-```
 
-Server runs at http://localhost:8000
-
-### Example API Usage (for Grok testing)
+## Example API Usage (Grok with auth)
 
 ```bash
-# Create a goal (with auth)
 curl -X POST https://your-public-url/goals \
+  -H "X-API-Key: your-key" \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: your-secret-key" \
-  -d '{"description": "Build reliable agent swarm for code review", "success_criteria": ["All PRs reviewed", "Coverage > 90%"], "version": "v1.0"}'
-
-# ... other endpoints same (add X-API-Key header)
+  -d '{"description": "Test goal", "success_criteria": ["works securely"]}'
 ```
 
 ## Foci Project Instructions Compliance
 
-This harness was built following strict Foci workflow:
-- Created feature branch `feature/public-secure-deployment` from latest `main`
-- All changes via push + PR (no direct main edits)
-- Full paper trail with reviewable PR
-- Concise, actionable, versioned deliverables
-- Upstream checked before work
-
-## Next Steps
-- Deploy to live environment (public + secure)
-- Integrate real GitHub API for Git collaboration endpoints
-- Expand agent capabilities in Foci library
-- Add rate limiting + logging
+- New branch `chore/remove-docker-support` from latest `main`
+- All via PR (no main edits)
+- Full paper trail
+- Upstream checked (clean)
 
 ---
-*Built by Grok following Foci Project Instructions. All updates via PR.*
+*Built by Grok following Foci Project Instructions.*

@@ -7,7 +7,7 @@ import sys
 sys.path.append('.')
 from src.foci.loki import Loki
 
-app = FastAPI(title='Foci MCP Harness Server (Secure Public)', version='0.2.0')
+app = FastAPI(title='Foci MCP Harness Server (Secure Public)', version='0.2.1')
 
 # Security: API Key (set via env)
 API_KEY = os.getenv('API_KEY', 'dev-only-insecure-key')
@@ -40,7 +40,27 @@ class SwarmSpawn(BaseModel):
 
 @app.get('/health')
 def health_check():
-    return {'status': 'healthy', 'service': 'foci-mcp-harness', 'secure': True, 'version': '0.2.0'}
+    return {'status': 'healthy', 'service': 'foci-mcp-harness', 'secure': True, 'version': '0.2.1'}
+
+# Public manifest endpoint for Grok custom connector installation
+# This allows Grok to discover and validate the connector without requiring API key
+@app.get('/')
+@app.get('/manifest')
+def connector_manifest():
+    return {
+        "name": "Foci MCP Harness",
+        "version": "0.2.1",
+        "description": "MCP server exposing Foci agent library, goal orchestration, and Git collaboration workflows for Grok/Loki testing.",
+        "endpoints": {
+            "health": "/health",
+            "goals": "/goals (requires X-API-Key)",
+            "swarms": "/swarms (requires X-API-Key)",
+            "metrics": "/metrics/{goal_id} (requires X-API-Key)",
+            "git_pr": "/git/pr (requires X-API-Key)"
+        },
+        "auth": "X-API-Key header required for all functional endpoints except /health and /manifest",
+        "docs": "/docs"
+    }
 
 @app.post('/goals', dependencies=[Depends(verify_api_key)])
 def create_goal(g: GoalCreate):
